@@ -1,0 +1,136 @@
+0000008E Starting Address
+Assembler used: EASy68K Editor/Assembler v5.15.04
+Created On: 11/11/2018 22:50:06
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      :Problemes T1                  
+00000000                             3  * Written by :Bartomeu Ramis                
+00000000                             4  * Date       :11/11/18
+00000000                             5  *-----------------------------------------------------------
+00000000                             6  
+00000000                             7  
+00000000                             8  ; -----------------------------------------------------------------------------
+00000000                             9  SHOWHWIN
+00000000                            10  ; Shows the hardware window
+00000000                            11  ; Input - None
+00000000                            12  ; Output - None
+00000000                            13  ; Modifies - Nothing
+00000000                            14  ; -----------------------------------------------------------------------------
+00000000  48A7 C000                 15              MOVEM.W D0/D1,-(A7); guardam registres
+00000004                            16                
+00000004  103C 0020                 17              MOVE.B #32,D0
+00000008  4201                      18              CLR.B D1
+0000000A  4E4F                      19              TRAP #15
+0000000C                            20              
+0000000C  4C9F 0003                 21              MOVEM.W (A7)+,D0/D1; restauram registres
+00000010  4E75                      22              RTS
+00000012                            23              
+00000012                            24           
+00000012                            25  ; -----------------------------------------------------------------------------
+00000012                            26  GTHWADDR
+00000012                            27  ; Saves @ (A0) the memory positions where "seven-segment display", "leds", 
+00000012                            28  ; "switches" and "buttons" are mapped 
+00000012                            29  ; Input - A0: pointer to vector
+00000012                            30  ; Output - A0 with memory positions of the above
+00000012                            31  ; Modifies - none
+00000012                            32  ; -----------------------------------------------------------------------------   
+00000012  48E7 C0C0                 33              MOVEM.L D0/D1/A0/A1,-(A7); guardam registres
+00000016  103C 0020                 34              MOVE.B #32,D0
+0000001A  43F9 00000032             35              LEA     .DATA,A1
+00000020  1219                      36  .LOOP       MOVE.B (A1)+,D1
+00000022  6700 0008                 37              BEQ .END
+00000026  4E4F                      38              TRAP #15
+00000028  20C1                      39              MOVE.L D1,(A0)+
+0000002A  60F4                      40              BRA     .LOOP
+0000002C  4CDF 0303                 41  .END        MOVEM.L (A7)+,D0/D1/A0/A1; restauram registres
+00000030  4E75                      42              RTS
+00000032                            43              
+00000032= 01 02 03 07 00            44  .DATA       DC.B    1,2,3,7,0
+00000038                            45              DS.W    0     
+00000038                            46  
+00000038                            47  ; -----------------------------------------------------------------------------
+00000038                            48  WRTSEGM
+00000038                            49  ; Shows the content of D0.B on the most-right 7-segment display
+00000038                            50  ; Input - A0: pointer to the addres of 7-segment display 
+00000038                            51  ;       - D0: High bits: Number of display; Low bits: Number that will be shown 
+00000038                            52  ; Output - none
+00000038                            53  ; Modifies - none
+00000038                            54  ; -----------------------------------------------------------------------------
+00000038  48E7 E0C0                 55              MOVEM.L D0/D1/D2/A0/A1,-(A7); guardam registres
+0000003C  4840                      56              SWAP D0
+0000003E  123C 0000                 57              MOVE.B #0,D1
+00000042  1400                      58  .LOOP       MOVE.B D0,D2
+00000044  9401                      59              SUB.B D1,D2
+00000046  6700 000A                 60              BEQ .GOTDISP
+0000004A  5201                      61              ADDQ.B #1,D1
+0000004C  0658 0000                 62              ADD.W #0,(A0)+ ;to switc to the next 7-s. disp (It works OK?!)
+00000050  60F0                      63              BRA .LOOP
+00000052                            64              
+00000052  4840                      65  .GOTDISP    SWAP D0
+00000054  43F9 00000076             66              LEA.L DIGITS,A1
+0000005A  123C 0000                 67              MOVE.B #0,D1
+0000005E  1400                      68  .CHECKVALUE MOVE.B D0,D2
+00000060  9401                      69              SUB.B D1,D2           
+00000062  6700 000A                 70              BEQ .END
+00000066  5201                      71              ADDQ.B #1,D1
+00000068  0659 0000                 72              ADD.W #0,(A1)+ ;to increase value of pointer (I hate myself...)
+0000006C  60F0                      73              BRA .CHECKVALUE          
+0000006E                            74              
+0000006E  3091                      75  .END        MOVE.W (A1),(A0)
+00000070  4CDF 0307                 76              MOVEM.L (A7)+,D0/D1/D2/A0/A1; restauram registres
+00000074  4E75                      77              RTS
+00000076= 3F00 0600 5B00 4...       78  DIGITS      DC.W $3F00,$0600,$5B00,$4F00,$6600,$6D00,$7D00,$0700,$7F00,$6F00,$0000,$4000
+0000008E                            79     
+0000008E                            80  *------------------------------------------------------------------------------
+0000008E                            81  *MAIN PROGRAM
+0000008E                            82  *------------------------------------------------------------------------------
+0000008E  6100 FF70                 83  START:      BSR SHOWHWIN
+00000092  41F9 000000C6             84              LEA DISADDR,A0
+00000098  6100 FF78                 85              BSR GTHWADDR
+0000009C  2079 000000C6             86              MOVE.L (DISADDR), A0
+000000A2  103C 0003                 87              MOVE.B #3,D0
+000000A6  4840                      88              SWAP D0
+000000A8  103C 0005                 89              MOVE.B #5,D0
+000000AC  618A                      90              BSR WRTSEGM
+000000AE                            91              
+000000AE  2079 000000CA             92              MOVE.L  (LEDADDR), A0
+000000B4  2279 000000CE             93              MOVE.L  (SWTADDR), A1
+000000BA  3011                      94  .LOOP       MOVE.W  (A1),D0
+000000BC  4600                      95              NOT.B   D0
+000000BE  3080                      96              MOVE.W  D0,(A0)
+000000C0  60F8                      97              BRA     .LOOP
+000000C2                            98              
+000000C2                            99  
+000000C2  FFFF FFFF                100      SIMHALT             ; halt simulator
+000000C6                           101      
+000000C6                           102  DISADDR     DS.L    1
+000000CA                           103  LEDADDR     DS.L    1
+000000CE                           104  SWTADDR     DS.L    1
+000000D2                           105  BUTADDR     DS.L    1
+000000D6                           106  
+000000D6                           107      END    START        ; last line of source
+
+No errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+BUTADDR             D2
+DIGITS              76
+DISADDR             C6
+GTHWADDR            12
+GTHWADDR:DATA       32
+GTHWADDR:END        2C
+GTHWADDR:LOOP       20
+LEDADDR             CA
+SHOWHWIN            0
+START               8E
+START:LOOP          BA
+SWTADDR             CE
+WRTSEGM             38
+WRTSEGM:CHECKVALUE  5E
+WRTSEGM:END         6E
+WRTSEGM:GOTDISP     52
+WRTSEGM:LOOP        42
