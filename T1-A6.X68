@@ -1,10 +1,9 @@
 *-----------------------------------------------------------
-* Title      :Problemes T1                  
-* Written by :Bartomeu Ramis                
-* Date       :11/11/18
+* Title      :Problemes T1: 6
+* Written by :BARTOMEU RAMIS TARRAGÓ
 *-----------------------------------------------------------
-
-
+    ORG    $1000
+    
 ; -----------------------------------------------------------------------------
 SHOWHWIN
 ; Shows the hardware window
@@ -21,7 +20,6 @@ SHOWHWIN
             MOVEM.W (A7)+,D0/D1; restauram registres
             RTS
             
-         
 ; -----------------------------------------------------------------------------
 GTHWADDR
 ; Saves @ (A0) the memory positions where "seven-segment display", "leds", 
@@ -42,8 +40,8 @@ GTHWADDR
             RTS
             
 .DATA       DC.B    1,2,3,7,0
-            DS.W    0     
-
+            DS.W    0            
+    
 ; -----------------------------------------------------------------------------
 WRTSEGM
 ; Shows the content of D0.B on the most-right 7-segment display
@@ -77,26 +75,44 @@ WRTSEGM
             RTS
 DIGITS      DC.W $3F00,$0600,$5B00,$4F00,$6600,$6D00,$7D00,$0700,$7F00,$6F00,$0000,$4000
    
+ 
+; -----------------------------------------------------------------------------
+CNTSWTCH
+;Returns pressed switches in D0.B (each bit represents a switch) 
+; Input - A0: adress to switches 
+; Output - D0.B: switches pressed (bits will be 1)
+; Modifies - none
+; -----------------------------------------------------------------------------
+            MOVEM.L D1/D2/A0/A1,-(A7); guardam registres
+            MOVE.B (A0),D0
+            MOVEM.L (A7)+,D1/D2/A0/A1; restauram registres
+            RTS
+
 *------------------------------------------------------------------------------
 *MAIN PROGRAM
 *------------------------------------------------------------------------------
+ 
 START:      BSR SHOWHWIN
             LEA DISADDR,A0
             BSR GTHWADDR
-            MOVE.L (DISADDR), A0
-            MOVE.B #3,D0 ; Set the 7-seg display that will show a number
+            MOVE.B #7,D0 ;Indicam a quin 7-s disp volem mostrar el nombre
             SWAP D0
-            MOVE.B #5,D0 ; Set the number that will be displayed
+.LOOP       MOVE.L (SWTADDR), A0
+            BSR CNTSWTCH
+            MOVE.B D0,D3
+            MOVE.B #0,D2
+            MOVE.W #7,D1
+.COUNTLOOP  AND.B #$01,D3
+            BEQ .IS0
+            ADDQ.B #1,D2           
+.IS0        LSR.B #1,D0
+            MOVE.B D0,D3
+            DBRA D1,.COUNTLOOP
+ 
+            MOVE.B D2,D0
+            MOVE.L (DISADDR), A0
             BSR WRTSEGM
-            
-            MOVE.L  (LEDADDR), A0
-            MOVE.L  (SWTADDR), A1
-.LOOP       MOVE.W  (A1),D0
-            NOT.B   D0
-            MOVE.W  D0,(A0)
-            BRA     .LOOP
-            
-
+            BRA .LOOP
     SIMHALT             ; halt simulator
     
 DISADDR     DS.L    1

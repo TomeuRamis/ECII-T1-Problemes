@@ -1,9 +1,9 @@
-0000008E Starting Address
+0000009A Starting Address
 Assembler used: EASy68K Editor/Assembler v5.15.04
-Created On: 11/11/2018 22:50:06
+Created On: 12/11/2018 19:37:11
 
 00000000                             1  *-----------------------------------------------------------
-00000000                             2  * Title      :Problemes T1                  
+00000000                             2  * Title      :Problemes T1: 1-5                
 00000000                             3  * Written by :Bartomeu Ramis                
 00000000                             4  * Date       :11/11/18
 00000000                             5  *-----------------------------------------------------------
@@ -81,34 +81,47 @@ Created On: 11/11/2018 22:50:06
 00000074  4E75                      77              RTS
 00000076= 3F00 0600 5B00 4...       78  DIGITS      DC.W $3F00,$0600,$5B00,$4F00,$6600,$6D00,$7D00,$0700,$7F00,$6F00,$0000,$4000
 0000008E                            79     
-0000008E                            80  *------------------------------------------------------------------------------
-0000008E                            81  *MAIN PROGRAM
-0000008E                            82  *------------------------------------------------------------------------------
-0000008E  6100 FF70                 83  START:      BSR SHOWHWIN
-00000092  41F9 000000C6             84              LEA DISADDR,A0
-00000098  6100 FF78                 85              BSR GTHWADDR
-0000009C  2079 000000C6             86              MOVE.L (DISADDR), A0
-000000A2  103C 0003                 87              MOVE.B #3,D0
-000000A6  4840                      88              SWAP D0
-000000A8  103C 0005                 89              MOVE.B #5,D0
-000000AC  618A                      90              BSR WRTSEGM
-000000AE                            91              
-000000AE  2079 000000CA             92              MOVE.L  (LEDADDR), A0
-000000B4  2279 000000CE             93              MOVE.L  (SWTADDR), A1
-000000BA  3011                      94  .LOOP       MOVE.W  (A1),D0
-000000BC  4600                      95              NOT.B   D0
-000000BE  3080                      96              MOVE.W  D0,(A0)
-000000C0  60F8                      97              BRA     .LOOP
-000000C2                            98              
-000000C2                            99  
-000000C2  FFFF FFFF                100      SIMHALT             ; halt simulator
-000000C6                           101      
-000000C6                           102  DISADDR     DS.L    1
-000000CA                           103  LEDADDR     DS.L    1
-000000CE                           104  SWTADDR     DS.L    1
-000000D2                           105  BUTADDR     DS.L    1
-000000D6                           106  
-000000D6                           107      END    START        ; last line of source
+0000008E                            80     
+0000008E                            81  ; -----------------------------------------------------------------------------
+0000008E                            82  CNTSWTCH
+0000008E                            83  ;Returns pressed switches in D0.B (each bit represents a switch) 
+0000008E                            84  ; Input - A0: adress to switches 
+0000008E                            85  ; Output - D0.B: switches pressed (bits will be 1)
+0000008E                            86  ; Modifies - none
+0000008E                            87  ; -----------------------------------------------------------------------------
+0000008E  48E7 60C0                 88              MOVEM.L D1/D2/A0/A1,-(A7); guardam registres
+00000092  1010                      89              MOVE.B (A0),D0
+00000094  4CDF 0306                 90              MOVEM.L (A7)+,D1/D2/A0/A1; restauram registres
+00000098  4E75                      91              RTS
+0000009A                            92   
+0000009A                            93  *------------------------------------------------------------------------------
+0000009A                            94  *MAIN PROGRAM
+0000009A                            95  *------------------------------------------------------------------------------
+0000009A  6100 FF64                 96  START:      BSR SHOWHWIN
+0000009E  41F9 000000D4             97              LEA DISADDR,A0
+000000A4  6100 FF6C                 98              BSR GTHWADDR
+000000A8  2079 000000D4             99              MOVE.L (DISADDR), A0
+000000AE  103C 0007                100              MOVE.B #7,D0 ; Set the 7-seg display that will show a number
+000000B2  4840                     101              SWAP D0
+000000B4  103C 0005                102              MOVE.B #5,D0 ; Set the number that will be displayed
+000000B8  6100 FF7E                103              BSR WRTSEGM
+000000BC                           104              
+000000BC  2079 000000D8            105              MOVE.L  (LEDADDR), A0
+000000C2  2279 000000DC            106              MOVE.L  (SWTADDR), A1
+000000C8  3011                     107  .LOOP       MOVE.W  (A1),D0
+000000CA  4600                     108              NOT.B   D0
+000000CC  3080                     109              MOVE.W  D0,(A0)
+000000CE  60F8                     110              BRA     .LOOP
+000000D0                           111              
+000000D0                           112  
+000000D0  FFFF FFFF                113      SIMHALT             ; halt simulator
+000000D4                           114      
+000000D4                           115  DISADDR     DS.L    1
+000000D8                           116  LEDADDR     DS.L    1
+000000DC                           117  SWTADDR     DS.L    1
+000000E0                           118  BUTADDR     DS.L    1
+000000E4                           119  
+000000E4                           120      END    START        ; last line of source
 
 No errors detected
 No warnings generated
@@ -117,18 +130,19 @@ No warnings generated
 SYMBOL TABLE INFORMATION
 Symbol-name         Value
 -------------------------
-BUTADDR             D2
+BUTADDR             E0
+CNTSWTCH            8E
 DIGITS              76
-DISADDR             C6
+DISADDR             D4
 GTHWADDR            12
 GTHWADDR:DATA       32
 GTHWADDR:END        2C
 GTHWADDR:LOOP       20
-LEDADDR             CA
+LEDADDR             D8
 SHOWHWIN            0
-START               8E
-START:LOOP          BA
-SWTADDR             CE
+START               9A
+START:LOOP          C8
+SWTADDR             DC
 WRTSEGM             38
 WRTSEGM:CHECKVALUE  5E
 WRTSEGM:END         6E
